@@ -1,0 +1,2 @@
+float KP = 10 , KI = 1000 , KD = 25/1;  - merge binisor
+cu viteza 200 merge destul de bine ca acuratete, dar e tot lent

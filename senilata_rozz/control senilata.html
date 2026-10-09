@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>PS4 Tank Dashboard</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#0b0b16;
+    color:white;
+    font-family:Arial, sans-serif;
+    overflow:hidden;
+}
+
+h1{
+    text-align:center;
+    color:#ff66cc;
+    text-shadow:0 0 20px #ff66cc;
+}
+
+.dashboard{
+    display:flex;
+    height:90vh;
+}
+
+.left{
+    width:60%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.right{
+    width:40%;
+    padding:20px;
+}
+
+.card{
+    background:#16162a;
+    border:1px solid #ff66cc55;
+    border-radius:15px;
+    padding:15px;
+    margin-bottom:15px;
+}
+
+.big{
+    font-size:40px;
+    text-align:center;
+    color:#ff66cc;
+}
+
+.status{
+    color:#00ff99;
+    font-weight:bold;
+}
+
+.tank{
+    position:relative;
+    width:350px;
+    height:180px;
+}
+
+.track{
+    position:absolute;
+    width:100%;
+    height:40px;
+    background:repeating-linear-gradient(
+      90deg,
+      #444 0px,
+      #444 10px,
+      #777 10px,
+      #777 20px
+    );
+    border-radius:20px;
+}
+
+.topTrack{
+    top:0;
+}
+
+.bottomTrack{
+    bottom:0;
+}
+
+.bodyTank{
+    position:absolute;
+    top:35px;
+    left:40px;
+    width:270px;
+    height:110px;
+    background:#ff66cc;
+    border-radius:20px;
+    box-shadow:0 0 30px #ff66cc;
+}
+
+.turret{
+    position:absolute;
+    top:60px;
+    left:120px;
+    width:110px;
+    height:60px;
+    background:#ff99dd;
+    border-radius:15px;
+}
+
+.cannon{
+    position:absolute;
+    top:80px;
+    left:220px;
+    width:90px;
+    height:12px;
+    background:#ddd;
+}
+
+.spinForward{
+    animation:moveTrack .25s linear infinite;
+}
+
+.spinBack{
+    animation:moveTrackBack .25s linear infinite;
+}
+
+@keyframes moveTrack{
+    from{background-position:0;}
+    to{background-position:20px;}
+}
+
+@keyframes moveTrackBack{
+    from{background-position:20px;}
+    to{background-position:0;}
+}
+
+.joy{
+    width:150px;
+    height:150px;
+    border:2px solid #ff66cc;
+    border-radius:50%;
+    position:relative;
+    margin:auto;
+}
+
+.dot{
+    width:20px;
+    height:20px;
+    background:#00ffcc;
+    border-radius:50%;
+    position:absolute;
+    left:65px;
+    top:65px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🚀 PS4 TANK CONTROL CENTER</h1>
+
+<div class="dashboard">
+
+<div class="left">
+
+<div class="tank">
+
+<div id="track1" class="track topTrack"></div>
+
+<div class="bodyTank"></div>
+
+<div class="turret"></div>
+
+<div class="cannon"></div>
+
+<div id="track2" class="track bottomTrack"></div>
+
+</div>
+
+</div>
+
+<div class="right">
+
+<div class="card">
+<div>ESP8266</div>
+<div id="wifi" class="status">ONLINE</div>
+</div>
+
+<div class="card">
+<div>Controller</div>
+<div id="pad">❌ Not connected</div>
+</div>
+
+<div class="card">
+<div>Comandă activă</div>
+<div id="cmd" class="big">STOP</div>
+</div>
+
+<div class="card">
+<div>R2</div>
+<div id="r2">0%</div>
+
+<br>
+
+<div>L2</div>
+<div id="l2">0%</div>
+</div>
+
+<div class="card">
+
+<div>Joystick</div>
+
+<div class="joy">
+<div class="dot" id="dot"></div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const espIP="192.168.4.1";
+
+let lastCmd="stop";
+
+function send(cmd){
+
+    if(cmd===lastCmd) return;
+
+    lastCmd=cmd;
+
+    document.getElementById("cmd").innerHTML=cmd.toUpperCase();
+
+    updateTank(cmd);
+
+    fetch(`http://${espIP}/cmd?c=${cmd}`)
+    .catch(()=>{
+        document.getElementById("wifi").innerHTML="OFFLINE";
+        document.getElementById("wifi").style.color="red";
+    });
+}
+
+function updateTank(cmd){
+
+    let t1=document.getElementById("track1");
+    let t2=document.getElementById("track2");
+
+    t1.className="track topTrack";
+    t2.className="track bottomTrack";
+
+    if(cmd==="f"){
+        t1.classList.add("spinForward");
+        t2.classList.add("spinForward");
+    }
+
+    if(cmd==="b"){
+        t1.classList.add("spinBack");
+        t2.classList.add("spinBack");
+    }
+
+    if(cmd==="l"){
+        t1.classList.add("spinBack");
+        t2.classList.add("spinForward");
+    }
+
+    if(cmd==="r"){
+        t1.classList.add("spinForward");
+        t2.classList.add("spinBack");
+    }
+}
+
+setInterval(()=>{
+
+    const gp=navigator.getGamepads()[0];
+
+    if(!gp) return;
+
+    document.getElementById("pad").innerHTML="✅ Connected";
+
+    let cmd="stop";
+
+    const steer=gp.axes[0];
+
+    const R2=gp.buttons[7].value;
+
+    const L2=gp.buttons[6].value;
+
+    document.getElementById("r2").innerHTML=
+      Math.round(R2*100)+"%";
+
+    document.getElementById("l2").innerHTML=
+      Math.round(L2*100)+"%";
+
+    const dot=document.getElementById("dot");
+
+    dot.style.left=(65+steer*50)+"px";
+
+    if(R2>0.2) cmd="f";
+    else if(L2>0.2) cmd="b";
+    else if(steer<-0.5) cmd="l";
+    else if(steer>0.5) cmd="r";
+
+    send(cmd);
+
+    if(gp.buttons[4].pressed) send("l1");
+    if(gp.buttons[5].pressed) send("r1");
+
+},50);
+
+window.addEventListener("gamepaddisconnected",()=>{
+
+    document.getElementById("pad").innerHTML=
+      "❌ Disconnected";
+
+    send("stop");
+
+});
+
+</script>
+
+</body>
+</html>

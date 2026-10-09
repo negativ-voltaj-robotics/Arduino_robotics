@@ -1,0 +1,58 @@
+DOCTYPE html>
+<html>
+<head>
+  <title>PS4 HOLD CONTROL</title>
+</head>
+
+<body>
+<h2>PS4 Tank Hold Drive</h2>
+
+<script>
+const espIP = "192.168.4.1";
+
+let lastCmd = "stop";
+
+function send(cmd){
+  if(cmd === lastCmd) return;
+  lastCmd = cmd;
+
+  fetch(`http://${espIP}/cmd?c=${cmd}`);
+}
+
+function stop(){
+  send("stop");
+}
+
+setInterval(() => {
+  const gp = navigator.getGamepads()[0];
+  if(!gp) return;
+
+  let cmd = "stop";
+
+  const steer = gp.axes[0];
+  const R2 = gp.buttons[7].value;
+  const L2 = gp.buttons[6].value;
+
+  // PRIORITATE CONTROL
+  if(R2 > 0.2) cmd = "f";
+  else if(L2 > 0.2) cmd = "b";
+  else if(steer < -0.5) cmd = "l";
+  else if(steer > 0.5) cmd = "r";
+
+  send(cmd);
+
+  // L1 / R1 hold
+  if(gp.buttons[4].pressed) send("l1");
+  if(gp.buttons[5].pressed) send("r1");
+
+  // dacă nu apeși nimic → stop
+  if(cmd === "stop") stop();
+
+}, 50);
+
+// extra safety: dacă pierzi controllerul
+window.addEventListener("gamepaddisconnected", stop);
+</script>
+
+</body>
+</html>

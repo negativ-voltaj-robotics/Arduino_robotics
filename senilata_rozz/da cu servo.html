@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PS4 Robot Control + Servos</title>
+</head>
+
+<body>
+<h2>PS4 Tank + Servo Control</h2>
+<p id="status">Conectează controllerul...</p>
+
+<script>
+const espIP = "192.168.4.1";
+
+let lastCmd = "";
+
+function send(cmd){
+  if(cmd === lastCmd) return;
+  lastCmd = cmd;
+
+  fetch(`http://${espIP}/cmd?c=${cmd}`);
+}
+
+setInterval(() => {
+  const gp = navigator.getGamepads()[0];
+  if(!gp) return;
+
+  let cmd = "";
+
+  const steer = gp.axes[0];
+  const R2 = gp.buttons[7].value;
+  const L2 = gp.buttons[6].value;
+
+  // DRIVE (tank)
+  if(R2 > 0.2) cmd = "f";
+  else if(L2 > 0.2) cmd = "b";
+  else if(steer < -0.5) cmd = "l";
+  else if(steer > 0.5) cmd = "r";
+
+  // SERVO 1 (D7)
+  else if(gp.buttons[4].pressed) cmd = "l1";  // L1 -> 120°
+  else if(gp.buttons[5].pressed) cmd = "r1";  // R1 -> 0°
+
+  // SERVO 2 (D4)
+  else if(R2 > 0.8) cmd = "r2"; // 60°
+  else if(L2 > 0.8) cmd = "l2"; // 0°
+
+  else cmd = "stop";
+
+  send(cmd);
+
+}, 40);
+
+// safety stop dacă pierzi controllerul
+window.addEventListener("gamepaddisconnected", () => {
+  fetch(`http://${espIP}/cmd?c=stop`);
+});
+</script>
+
+</body>
+</html>

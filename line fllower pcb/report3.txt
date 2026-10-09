@@ -1,0 +1,21 @@
+Info: Processing symbol 'J1:Connector_PinHeader_2.54mm:PinHeader_1x15_P2.54mm_Vertical'.
+Info: Processing symbol 'J2:Connector_PinHeader_2.54mm:PinHeader_1x15_P2.54mm_Vertical'.
+Info: Processing symbol 'J3:'.
+Info: Processing symbol 'J4:'.
+Info: Processing symbol 'J5:'.
+Info: Processing symbol 'J6:'.
+Info: Processing symbol 'J7:'.
+Info: Processing symbol 'J8:'.
+Info: Processing symbol 'J9:'.
+Info: Processing symbol 'U1:Package_SO:SSOP-24_5.3x8.2mm_P0.65mm'.
+Info: Updating design variants...
+Error: Cannot add J3 (no footprint assigned).
+Error: Cannot add J4 (no footprint assigned).
+Error: Cannot add J5 (no footprint assigned).
+Error: Cannot add J6 (no footprint assigned).
+Error: Cannot add J7 (no footprint assigned).
+Error: Cannot add J8 (no footprint assigned).
+Error: Cannot add J9 (no footprint assigned).
+
+
+Info: Total warnings: 0, errors: 7.

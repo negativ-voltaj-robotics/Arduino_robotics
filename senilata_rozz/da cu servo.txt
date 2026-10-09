@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ESP8266 PS4 Controller</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#111;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+    overflow:hidden;
+}
+
+h1{
+    margin-top:10px;
+}
+
+.container{
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    height:70vh;
+}
+
+.joystick{
+    width:220px;
+    height:220px;
+    background:#222;
+    border-radius:50%;
+    position:relative;
+    touch-action:none;
+}
+
+.stick{
+    width:90px;
+    height:90px;
+    background:#555;
+    border-radius:50%;
+    position:absolute;
+    left:65px;
+    top:65px;
+}
+
+.buttons{
+    display:grid;
+    grid-template-columns:repeat(2,120px);
+    gap:20px;
+}
+
+button{
+    width:120px;
+    height:70px;
+    border:none;
+    border-radius:15px;
+    font-size:22px;
+    background:#333;
+    color:white;
+}
+
+button:active{
+    background:#00aaFF;
+}
+
+.topButtons{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    margin-top:15px;
+}
+
+.smallBtn{
+    width:80px;
+    height:50px;
+    font-size:18px;
+}
+
+</style>
+</head>
+<body>
+
+<h1>ESP8266 Robot Controller</h1>
+
+<!-- Servo mici -->
+<div class="topButtons">
+
+    <button class="smallBtn"
+        ontouchstart="sendCmd('l1')"
+        onmousedown="sendCmd('l1')">
+        L1
+    </button>
+
+    <button class="smallBtn"
+        ontouchstart="sendCmd('l2')"
+        onmousedown="sendCmd('l2')">
+        L2
+    </button>
+
+    <button class="smallBtn"
+        ontouchstart="sendCmd('r1')"
+        onmousedown="sendCmd('r1')">
+        R1
+    </button>
+
+    <button class="smallBtn"
+        ontouchstart="sendCmd('r2')"
+        onmousedown="sendCmd('r2')">
+        R2
+    </button>
+
+</div>
+
+<div class="container">
+
+    <!-- JOYSTICK -->
+    <div class="joystick" id="joystick">
+        <div class="stick" id="stick"></div>
+    </div>
+
+    <!-- X / CIRCLE -->
+    <div class="buttons">
+
+        <button
+            ontouchstart="sendCmd('x')"
+            onmousedown="sendCmd('x')">
+            X
+        </button>
+
+        <button
+            ontouchstart="sendCmd('o')"
+            onmousedown="sendCmd('o')">
+            O
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+const joystick = document.getElementById("joystick");
+const stick = document.getElementById("stick");
+
+let active = false;
+
+function sendCmd(cmd){
+    fetch("/cmd?c=" + cmd)
+    .catch(err => console.log(err));
+}
+
+function resetStick(){
+    stick.style.left = "65px";
+    stick.style.top = "65px";
+}
+
+function handleMove(x, y){
+
+    const rect = joystick.getBoundingClientRect();
+
+    let dx = x - rect.left - 110;
+    let dy = y - rect.top - 110;
+
+    const distance = Math.sqrt(dx*dx + dy*dy);
+
+    if(distance > 80){
+        dx = dx * 80 / distance;
+        dy = dy * 80 / distance;
+    }
+
+    stick.style.left = (dx + 65) + "px";
+    stick.style.top = (dy + 65) + "px";
+
+    // DIRECTII
+
+    if(Math.abs(dx) > Math.abs(dy)){
+
+        if(dx > 20){
+            sendCmd("r");
+        }
+        else if(dx < -20){
+            sendCmd("l");
+        }
+
+    }else{
+
+        if(dy > 20){
+            sendCmd("b");
+        }
+        else if(dy < -20){
+            sendCmd("f");
+        }
+
+    }
+}
+
+// TOUCH
+
+joystick.addEventListener("touchstart", (e)=>{
+    active = true;
+});
+
+joystick.addEventListener("touchmove", (e)=>{
+
+    if(!active) return;
+
+    e.preventDefault();
+
+    const touch = e.touches[0];
+
+    handleMove(touch.clientX, touch.clientY);
+
+});
+
+joystick.addEventListener("touchend", ()=>{
+
+    active = false;
+    resetStick();
+
+});
+
+// MOUSE
+
+joystick.addEventListener("mousedown", ()=>{
+    active = true;
+});
+
+document.addEventListener("mousemove", (e)=>{
+
+    if(!active) return;
+
+    handleMove(e.clientX, e.clientY);
+
+});
+
+document.addEventListener("mouseup", ()=>{
+
+    active = false;
+    resetStick();
+
+});
+
+</script>
+
+</body>
+</html>
